@@ -2,7 +2,7 @@ import torch.nn as nn
 from lib.config import cfg
 import torch
 from lib.networks.renderer import if_clight_renderer
-from lib.train import make_optimizer
+import lpips
 
 
 class NetworkWrapper(nn.Module):
@@ -12,9 +12,8 @@ class NetworkWrapper(nn.Module):
         self.net = net
         self.renderer = if_clight_renderer.Renderer(self.net)
 
-        # TODO : Should we change here the loss, i.e add a value lpips.
-        # The function uses mse and smooth l1
         self.img2mse = lambda x, y : torch.mean((x - y) ** 2)
+        self.lpips = lpips.LPIPS(net='vgg')
         self.acc_crit = torch.nn.functional.smooth_l1_loss
 
     def forward(self, batch):
@@ -24,11 +23,33 @@ class NetworkWrapper(nn.Module):
         loss = 0
 
         mask = batch['mask_at_box']
-        img_loss = self.img2mse(ret['rgb_map'][mask], batch['rgb'][mask])
-        scalar_stats.update({'img_loss': img_loss})
-        loss += img_loss
+
+        rgb_map = ret['rgb_map'][mask] # (G * 32 * 32, 3)
+        rgb_gt = batch['rgb'][mask] # (G * 32 * 32, 3)
+
+        img_mse = self.img2mse(rgb_map, rgb_gt)
+
+        ########################################## LPIPS PREP ##########################################
+
+        # Normalise to [-1, 1]
+        rgb_map = (rgb_map[..., [2, 1, 0]] * 2) - 1
+        rgb_gt = (rgb_gt[..., [2, 1, 0]] * 2) - 1
+
+        # The tensor needs to be of size (G, 3, H, W) for LPIPS
+        lpips_map = rgb_map.view(6, 32, 32, 3).permute(0, 3, 1, 2)
+        lpips_gt = rgb_gt.view(6, 32, 32, 3).permute(0, 3, 1, 2)
+
+        # compute lpips
+        img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor (i.e length 2 here)
+        img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
+
+        ########################################## LPIPS PREP ##########################################
+
+        scalar_stats.update({'img_loss': img_mse})
+        loss += (0.2 * img_mse + img_lpips)
 
         if 'rgb0' in ret:
+            print("yess")
             img_loss0 = self.img2mse(ret['rgb0'], batch['rgb'])
             scalar_stats.update({'img_loss0': img_loss0})
             loss += img_loss0

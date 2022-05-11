@@ -151,6 +151,7 @@ class Dataset(data.Dataset):
         coord, out_sh, can_bounds, bounds, Rh, Th = self.prepare_input(
             i)
 
+        
         rgb, ray_o, ray_d, near, far, coord_, mask_at_box = if_nerf_dutils.sample_ray_h36m(
             img, msk, K, R, T, can_bounds, self.nrays, self.split)
 
