@@ -20,7 +20,7 @@ class Trainer(object):
         self.local_rank = cfg.local_rank
         self.device = device
 
-    def reduce__stats(self, loss_stats):
+    def reduce_loss_stats(self, loss_stats):
         reduced_losses = {k: torch.mean(v) for k, v in loss_stats.items()}
         return reduced_losses
 
