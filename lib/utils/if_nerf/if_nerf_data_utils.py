@@ -194,7 +194,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
         mask_at_box_list = []
 
         # Sample 32*32 patches
-        for _ in range(4):
+        for _ in range(cfg.train.n32):
             # sample rays on body or face
             coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
@@ -213,7 +213,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             mask_at_box_list.append(mask_at_box[mask_at_box])
 
         # Sample 16*16 patches
-        for _ in range(8):
+        for _ in range(cfg.train.n16):
             # sample rays on body or face
             coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
@@ -232,7 +232,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             mask_at_box_list.append(mask_at_box[mask_at_box])
 
         # Sample 8*8 patches
-        for _ in range(0):
+        for _ in range(cfg.train.n8):
             # sample rays on body or face
             coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 

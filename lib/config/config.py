@@ -89,6 +89,11 @@ cfg.train.vgg_layer_name = [0,0,0,0,0]
 cfg.train.use_ssim = False
 cfg.train.use_d = False
 
+#patches
+cfg.train.n_32 = 6
+cfg.train.n_16 = 0
+cfg.train.n_8 = 0
+
 # test
 cfg.test = CN()
 cfg.test.dataset = 'CocoVal'
