@@ -44,6 +44,10 @@ class NetworkWrapper(nn.Module):
         lpips_map_16 = rgb_map[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
         lpips_gt_16 = rgb_gt[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
 
+        # Same for the F 8*8 patches
+        #lpips_map_8 = rgb_map[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
+        #lpips_gt_8 = rgb_gt[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
+
         # compute lpips
         img_lpips_32 = self.lpips.forward(lpips_map_32, lpips_gt_32) # This returns d, a legnth N tensor
         img_lpips_16 = self.lpips.forward(lpips_map_16, lpips_gt_16)

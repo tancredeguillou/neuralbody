@@ -231,6 +231,25 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             coord_list.append(patch_coords[mask_at_box])
             mask_at_box_list.append(mask_at_box[mask_at_box])
 
+        # Sample 8*8 patches
+        for _ in range(0):
+            # sample rays on body or face
+            coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
+
+            ray_o_reshaped, ray_d_reshaped, rgb_reshaped, near_, far_, patch_coords, mask_at_box = compute_patch(
+                coords, ray_o, ray_d, img, bounds, half_size=4
+            )
+            near_ = near_.astype(np.float32)
+            far_ = far_.astype(np.float32)
+
+            ray_o_list.append(ray_o_reshaped[mask_at_box])
+            ray_d_list.append(ray_d_reshaped[mask_at_box])
+            rgb_list.append(rgb_reshaped[mask_at_box])
+            near_list.append(near_)
+            far_list.append(far_)
+            coord_list.append(patch_coords[mask_at_box])
+            mask_at_box_list.append(mask_at_box[mask_at_box])
+
         ray_o = np.concatenate(ray_o_list)
         ray_d = np.concatenate(ray_d_list)
         rgb = np.concatenate(rgb_list)
