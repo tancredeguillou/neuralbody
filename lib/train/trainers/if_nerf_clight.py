@@ -24,8 +24,8 @@ class NetworkWrapper(nn.Module):
 
         mask = batch['mask_at_box']
 
-        rgb_map = ret['rgb_map'][mask] # (G * 32 * 32, 3)
-        rgb_gt = batch['rgb'][mask] # (G * 32 * 32, 3)
+        rgb_map = ret['rgb_map'][mask] # ((G * 32 * 32) + (F * 16 * 16), 3)
+        rgb_gt = batch['rgb'][mask] # ((G * 32 * 32) + (F * 16 * 16), 3)
 
         img_mse = self.img2mse(rgb_map, rgb_gt)
 
@@ -36,11 +36,18 @@ class NetworkWrapper(nn.Module):
         rgb_gt = (rgb_gt[..., [2, 1, 0]] * 2) - 1
 
         # The tensor needs to be of size (G, 3, H, W) for LPIPS
-        lpips_map = rgb_map.view(6, 32, 32, 3).permute(0, 3, 1, 2)
-        lpips_gt = rgb_gt.view(6, 32, 32, 3).permute(0, 3, 1, 2)
+        # Take only the first G 32*32 patches
+        lpips_map_32 = rgb_map[:4*32*32, :].view(4, 32, 32, 3).permute(0, 3, 1, 2)
+        lpips_gt_32 = rgb_gt[:4*32*32, :].view(4, 32, 32, 3).permute(0, 3, 1, 2)
+
+        # Same for the F 16*16 patches
+        lpips_map_16 = rgb_map[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
+        lpips_gt_16 = rgb_gt[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
 
         # compute lpips
-        img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor (i.e length 2 here)
+        img_lpips_32 = self.lpips.forward(lpips_map_32, lpips_gt_32) # This returns d, a legnth N tensor
+        img_lpips_16 = self.lpips.forward(lpips_map_16, lpips_gt_16)
+        img_lpips = torch.cat((img_lpips_32, img_lpips_16), 1)
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
 
         ########################################## LPIPS PREP ##########################################
