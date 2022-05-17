@@ -42,7 +42,7 @@ train:
     epoch: 400
     scheduler:
         type: 'exponential'
-        gamma: 0.1
+        gamma: 0.2
         decay_epochs: 1000
     num_workers: 16
     n32: 6
