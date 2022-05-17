@@ -56,9 +56,7 @@ class NetworkWrapper(nn.Module):
             img_lpips = torch.cat((img_lpips, img_lpips_2), 1)
 
         # compute lpips
-        print(img_lpips.size())
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
-        print(img_lpips)
 
         ########################################## LPIPS PREP ##########################################
 
