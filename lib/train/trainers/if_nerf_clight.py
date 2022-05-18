@@ -30,7 +30,7 @@ class NetworkWrapper(nn.Module):
         img_mse = self.img2mse(rgb_map, rgb_gt)
 
         ########################################## LPIPS PREP ##########################################
-
+        print("start")
         # Normalise to [-1, 1]
         rgb_map = (rgb_map[..., [2, 1, 0]] * 2) - 1
         rgb_gt = (rgb_gt[..., [2, 1, 0]] * 2) - 1
@@ -45,18 +45,23 @@ class NetworkWrapper(nn.Module):
             patches16 = cfg.train.n16 * 256
             lpips_map = rgb_map[patches32:patches32+patches16, :].view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
             lpips_gt = rgb_gt[patches32:patches32+patches16, :].view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
+            print(lpips_map.size())
             img_lpips_2 = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
-            img_lpips = torch.cat((img_lpips, img_lpips_2), 1)
+            print(img_lpips_2.size())
+            img_lpips = torch.cat((img_lpips, img_lpips_2), 0)
+            print(img_lpips.size())
 
         if cfg.train.n8 != 0:
             patches8 = cfg.train.n8 * 64
             lpips_map = rgb_map[patches32+patches16:patches32+patches16+patches8, :].view(cfg.train.n8, 8, 8, 3).permute(0, 3, 1, 2)
-            lpips_gt = rgb_gt[patches32+patches16:patches32+patches16+patches8, :].view(cfg.train.n32, 8, 8, 3).permute(0, 3, 1, 2)
-            img_lpips_2 = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
-            img_lpips = torch.cat((img_lpips, img_lpips_2), 1)
+            lpips_gt = rgb_gt[patches32+patches16:patches32+patches16+patches8, :].view(cfg.train.n8, 8, 8, 3).permute(0, 3, 1, 2)
+            img_lpips_3 = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
+            img_lpips = torch.cat((img_lpips, img_lpips_3), 0)
 
         # compute lpips
+        print(img_lpips.size())
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
+        print(img_lpips.size())
 
         ########################################## LPIPS PREP ##########################################
 
