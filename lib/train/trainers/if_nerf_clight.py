@@ -34,12 +34,16 @@ class NetworkWrapper(nn.Module):
         # Normalise to [-1, 1]
         rgb_map = (rgb_map[..., [2, 1, 0]] * 2) - 1
         rgb_gt = (rgb_gt[..., [2, 1, 0]] * 2) - 1
+        print("start")
+        print(rgb_map.size())
 
         # The tensor needs to be of size (G, 3, H, W) for LPIPS
         patches32 = cfg.train.n32 * 1024
         lpips_map = rgb_map[:patches32, :].view(cfg.train.n32, 32, 32, 3).permute(0, 3, 1, 2)
+        print(lpips_map.size())
         lpips_gt = rgb_gt[:patches32, :].view(cfg.train.n32, 32, 32, 3).permute(0, 3, 1, 2)
         img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
+        print(img_lpips.size())
 
         if cfg.train.n16 != 0:
             patches16 = cfg.train.n16 * 256
@@ -57,6 +61,7 @@ class NetworkWrapper(nn.Module):
 
         # compute lpips
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
+        print(img_lpips.size())
 
         ########################################## LPIPS PREP ##########################################
 
