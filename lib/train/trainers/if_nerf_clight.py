@@ -26,6 +26,8 @@ class NetworkWrapper(nn.Module):
 
         rgb_map = ret['rgb_map'][mask] # (G * 32 * 32, 3)
         rgb_gt = batch['rgb'][mask] # (G * 32 * 32, 3)
+        print("start")
+        print(rgb_map.size())
 
         img_mse = self.img2mse(rgb_map, rgb_gt)
 
@@ -41,7 +43,9 @@ class NetworkWrapper(nn.Module):
 
         # compute lpips
         img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor (i.e length 2 here)
+        print(img_lpips.size())
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
+        print(img_lpips.size())
 
         ########################################## LPIPS PREP ##########################################
 
