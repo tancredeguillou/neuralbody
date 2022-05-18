@@ -163,7 +163,7 @@ def compute_patch(coords, ray_o, ray_d, img, bounds, half_size=16):
         
         ray_o_ = ray_o[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 ray_o
         ray_d_ = ray_d[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 ray_d
-        rgb_ = img[coord[0] - 16:coord[0] + 16, coord[1] - 16:coord[1] + 16] # Sample a 32*32 rgb
+        rgb_ = img[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 rgb
 
         rgb_reshaped = rgb_.reshape(-1, 3).astype(np.float32) # (32 * 32, 3)
         ray_o_reshaped = ray_o_.reshape(-1, 3).astype(np.float32) # (32 * 32, 3)
@@ -194,7 +194,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
         mask_at_box_list = []
 
         # Sample 32*32 patches
-        for _ in range(4):
+        for _ in range(cfg.train.n32):
             # sample rays on body or face
             coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
@@ -213,7 +213,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             mask_at_box_list.append(mask_at_box[mask_at_box])
 
         # Sample 16*16 patches
-        for _ in range(8):
+        for _ in range(cfg.train.n16):
             # sample rays on body or face
             coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 

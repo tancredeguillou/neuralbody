@@ -30,24 +30,28 @@ class NetworkWrapper(nn.Module):
         img_mse = self.img2mse(rgb_map, rgb_gt)
 
         ########################################## LPIPS PREP ##########################################
-
         # Normalise to [-1, 1]
         rgb_map = (rgb_map[..., [2, 1, 0]] * 2) - 1
         rgb_gt = (rgb_gt[..., [2, 1, 0]] * 2) - 1
 
-        # The tensor needs to be of size (G, 3, H, W) for LPIPS
-        # Take only the first G 32*32 patches
-        lpips_map_32 = rgb_map[:4*32*32, :].view(4, 32, 32, 3).permute(0, 3, 1, 2)
-        lpips_gt_32 = rgb_gt[:4*32*32, :].view(4, 32, 32, 3).permute(0, 3, 1, 2)
-
-        # Same for the F 16*16 patches
-        lpips_map_16 = rgb_map[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
-        lpips_gt_16 = rgb_gt[4*32*32:, :].view(8, 16, 16, 3).permute(0, 3, 1, 2)
+        if cfg.train.n32 == 0:
+            lpips_map = rgb_map.view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
+            lpips_gt = rgb_gt.view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
+            img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
+        else:
+            # The tensor needs to be of size (G, 3, H, W) for LPIPS
+            patches32 = cfg.train.n32 * 1024
+            lpips_map = rgb_map[:patches32, :].view(cfg.train.n32, 32, 32, 3).permute(0, 3, 1, 2)
+            lpips_gt = rgb_gt[:patches32, :].view(cfg.train.n32, 32, 32, 3).permute(0, 3, 1, 2)
+            img_lpips = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
+    
+            if cfg.train.n16 != 0:
+                lpips_map = rgb_map[patches32:, :].view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
+                lpips_gt = rgb_gt[patches32:, :].view(cfg.train.n16, 16, 16, 3).permute(0, 3, 1, 2)
+                img_lpips_2 = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
+                img_lpips = torch.cat((img_lpips, img_lpips_2), 0)
 
         # compute lpips
-        img_lpips_32 = self.lpips.forward(lpips_map_32, lpips_gt_32) # This returns d, a legnth N tensor
-        img_lpips_16 = self.lpips.forward(lpips_map_16, lpips_gt_16)
-        img_lpips = torch.cat((img_lpips_32, img_lpips_16), 1)
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
 
         ########################################## LPIPS PREP ##########################################
