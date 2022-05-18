@@ -51,14 +51,6 @@ class NetworkWrapper(nn.Module):
             img_lpips = torch.cat((img_lpips, img_lpips_2), 0)
             #print(img_lpips.size())
 
-        if cfg.train.n8 != 0:
-            lpips_map = rgb_map[patches32+patches16:, :].view(cfg.train.n8, 8, 8, 3).permute(0, 3, 1, 2)
-            print(lpips_map.size())
-            lpips_gt = rgb_gt[patches32+patches16:, :].view(cfg.train.n8, 8, 8, 3).permute(0, 3, 1, 2)
-            print(lpips_gt.size())
-            img_lpips_3 = self.lpips.forward(lpips_map, lpips_gt) # This returns d, a legnth N tensor
-            img_lpips = torch.cat((img_lpips, img_lpips_3), 0)
-
         # compute lpips
         #print(img_lpips.size())
         img_lpips = torch.mean(img_lpips) # We do the mean between the lpips patches results
