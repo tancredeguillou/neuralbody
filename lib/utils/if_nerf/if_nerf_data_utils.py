@@ -200,7 +200,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             coords = np.argwhere(msk != 0) # coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
             ray_o_reshaped, ray_d_reshaped, rgb_reshaped, near_, far_, patch_coords, mask_at_box = compute_patch(
-                coords, ray_o, ray_d, img, bounds, half_size=16
+                coords, ray_o, ray_d, img, bounds, dilation=cfg.train.dil32, half_size=16
             )
             near_ = near_.astype(np.float32)
             far_ = far_.astype(np.float32)
@@ -219,7 +219,7 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
             coords = np.argwhere(msk != 0) #coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
             ray_o_reshaped, ray_d_reshaped, rgb_reshaped, near_, far_, patch_coords, mask_at_box = compute_patch(
-                coords, ray_o, ray_d, img, bounds, half_size=8
+                coords, ray_o, ray_d, img, bounds, dilation=cfg.train.dil16, half_size=8
             )
             near_ = near_.astype(np.float32)
             far_ = far_.astype(np.float32)
