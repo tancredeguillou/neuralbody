@@ -92,6 +92,8 @@ cfg.train.use_d = False
 #patches
 cfg.train.n32 = 4
 cfg.train.n16 = 0
+cfg.train.dil32 = 1
+cfg.train.dil16 = 1
 
 # test
 cfg.test = CN()

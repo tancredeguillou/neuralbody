@@ -150,20 +150,21 @@ def sample_ray(img, msk, K, R, T, bounds, nrays, split):
     return rgb, ray_o, ray_d, near, far, coord, mask_at_box
 
 
-def compute_patch(coords, ray_o, ray_d, img, bounds, half_size=16):
+def compute_patch(coords, ray_o, ray_d, img, bounds, dilation=1, half_size=16):
+    dil_size = half_size * dilation
     while True:
         coord = coords[np.random.randint(len(coords))] # take one coordinate (x, y)
-        coords_x = np.arange(coord[0] - half_size, coord[0] + half_size)
-        coords_y = np.arange(coord[1] - half_size, coord[1] + half_size)
+        coords_x = np.arange(coord[0] - dil_size, coord[0] + dil_size, dilation)
+        coords_y = np.arange(coord[1] - dil_size, coord[1] + dil_size, dilation)
 
         patch_coords = np.zeros((half_size*half_size*4, 2))
         for i, x in enumerate(coords_x):
             for j, y in enumerate(coords_y):
                 patch_coords[i*j] = np.array([x, y])
         
-        ray_o_ = ray_o[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 ray_o
-        ray_d_ = ray_d[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 ray_d
-        rgb_ = img[coord[0] - half_size:coord[0] + half_size, coord[1] - half_size:coord[1] + half_size] # Sample a 32*32 rgb
+        ray_o_ = ray_o[coord[0] - dil_size:coord[0] + dil_size:dilation, coord[1] - dil_size:coord[1] + dil_size:dilation] # Sample a 32*32 ray_o
+        ray_d_ = ray_d[coord[0] - dil_size:coord[0] + dil_size:dilation, coord[1] - dil_size:coord[1] + dil_size:dilation] # Sample a 32*32 ray_d
+        rgb_ = img[coord[0] - dil_size:coord[0] + dil_size:dilation, coord[1] - dil_size:coord[1] + dil_size:dilation] # Sample a 32*32 rgb
 
         rgb_reshaped = rgb_.reshape(-1, 3).astype(np.float32) # (32 * 32, 3)
         ray_o_reshaped = ray_o_.reshape(-1, 3).astype(np.float32) # (32 * 32, 3)
@@ -196,10 +197,10 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
         # Sample 32*32 patches
         for _ in range(cfg.train.n32):
             # sample rays on body or face
-            coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
+            coords = np.argwhere(msk != 0) # coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
             ray_o_reshaped, ray_d_reshaped, rgb_reshaped, near_, far_, patch_coords, mask_at_box = compute_patch(
-                coords, ray_o, ray_d, img, bounds, half_size=16
+                coords, ray_o, ray_d, img, bounds, dilation=cfg.train.dil32, half_size=16
             )
             near_ = near_.astype(np.float32)
             far_ = far_.astype(np.float32)
@@ -215,10 +216,10 @@ def sample_ray_h36m(img, msk, K, R, T, bounds, nrays, split):
         # Sample 16*16 patches
         for _ in range(cfg.train.n16):
             # sample rays on body or face
-            coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
+            coords = np.argwhere(msk != 0) #coords = np.argwhere((msk == 1) | (msk == 13)) # (N, 2) in order : row 0 goes first etc
 
             ray_o_reshaped, ray_d_reshaped, rgb_reshaped, near_, far_, patch_coords, mask_at_box = compute_patch(
-                coords, ray_o, ray_d, img, bounds, half_size=8
+                coords, ray_o, ray_d, img, bounds, dilation=cfg.train.dil16, half_size=8
             )
             near_ = near_.astype(np.float32)
             far_ = far_.astype(np.float32)
