@@ -47,6 +47,8 @@ train:
     num_workers: 16
     n32: 4
     n16: 0
+    dil32: 1
+    dil16: 1
 
 test:
     sampler: 'FrameSampler'
